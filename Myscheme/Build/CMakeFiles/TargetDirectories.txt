@@ -1,0 +1,3 @@
+/home/tommylz/文档/C++/Myscheme/Build/CMakeFiles/build.dir
+/home/tommylz/文档/C++/Myscheme/Build/CMakeFiles/edit_cache.dir
+/home/tommylz/文档/C++/Myscheme/Build/CMakeFiles/rebuild_cache.dir
