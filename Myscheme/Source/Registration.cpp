@@ -11,10 +11,9 @@
 extern pairing_t pairing;
 using namespace std;
 
-
 void Registration(char *psw_u, char *ID_u)
 {
-	cout << "***************************Registration Phase***************************" << endl;
+	cout << "***********************************Registration Phase*********************************" << endl;
 
 	// User inputs password & ID to the Client
 	// Object instantiation
@@ -26,6 +25,7 @@ void Registration(char *psw_u, char *ID_u)
 	element_t alpha;
 	element_init_G1(alpha, pairing);
 	client.blindPassword(alpha);
+	cout << "The client blinds the password and sends it to the key server!" << endl;
 
 	// Password hardening
 	element_t beta;
@@ -39,7 +39,11 @@ void Registration(char *psw_u, char *ID_u)
 	string s_u;
 	client.CredentialGen(s_u, cred_ks, cred_cs, alpha, beta, keyserver.public_key);
 	// Register with cloud server
+	cout << "The client ready to register with the cloud server!" << endl;
 	cloudserver.store(ID_u, cred_cs, s_u);
+    cout << "You have successfully registered with the cloud server!" << endl;
 	// Register with key server
+	cout << "The client ready to register with the key server!" << endl;
 	keyserver.store(ID_u, cred_ks);
+    cout << "You have successfully registered with the cloud server!" << endl;
 }

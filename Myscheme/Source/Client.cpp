@@ -63,11 +63,12 @@ string Client::verifyKS(element_t &alpha, element_t &beta, element_t &public_key
 
     if (!element_cmp(tmp1, tmp2))
     {
-        cout << "signature verifies" << endl;
+        cout << "The key server verifies!" << endl;
     }
     else
     {
-        cout << "signature does not verify" << endl;
+        cout << "The key server not verify!" << endl;
+        return "Error!";
     }
 
     // Deblindness
@@ -101,6 +102,7 @@ void Client::CredentialGen(string &s_u, string &cred_ks, string &cred_cs, elemen
     string input1 = psw_u_hat.substr(0, secureParam / 4) + "cloudserver";
     cred_cs = sha256Hash(input1);
 
+    // Generate a random
     s_u = Integer_to_string(randomGeneration(secureParam));
     string input2 = "keyserver" + psw_u_hat.substr(0, secureParam / 4) + s_u;
     cred_ks = sha256Hash(input2);
@@ -123,8 +125,6 @@ void Client::loginToCS(string &psw_u_hat, string &EM_CS, const CryptoPP::byte *i
     string separator = ":";
     string plain = this->ID_u + separator + timestamp_str;
     aes_CBC_Enc(plain, aes_key, iv, EM_CS);
-
-    cout << "The client ready to log in the cloud server" << endl;
 }
 
 void Client::loginToKS(string &psw_u_hat, string &s_u, string &EM_KS, CryptoPP::byte *iv)
@@ -173,24 +173,19 @@ void Client::loginToKS_KeyOutsource(string &EM_KS, string &ctx_sk, string &rho_u
     StringSource(dsk_iv, 16, true, new HexEncoder(new StringSink(dsk_iv_str)));
 
     string filename = "../Store/Client_iv.bin";
+    
+    ofstream outFile(filename, ios::binary);
 
-    ofstream outfile(filename, ios::binary);
-
-    if (!outfile.is_open())
+    if (!outFile.is_open())
     {
         cout << "Error opening file for writing." << endl;
     }
 
-    int dsk_iv_strLength = dsk_iv_str.length();
-    outfile.write(reinterpret_cast<char *>(&dsk_iv_strLength), sizeof(int));
-    outfile.write(dsk_iv_str.c_str(), dsk_iv_strLength);
-    outfile.close();
+    writeToBin(outFile, dsk_iv_str);
 
     // Genrate the integerity tag
     string integrity_hash_input = ctx_sk + dsk_str;
     rho_u = sha256Hash(integrity_hash_input).substr(0, secureParam / 4);
-
-    cout << "The client ready to log in the key server" << endl;
 }
 
 void Client::retrieval(string &sk, string &gamma_u, string &psw_u_hat, string &ctx_sk, string &rho_u)
@@ -208,26 +203,24 @@ void Client::retrieval(string &sk, string &gamma_u, string &psw_u_hat, string &c
     else
     {
         cout << "The integrity not verify" << endl;
+        return;
     }
 
     CryptoPP::byte dsk_iv[16];
 
     string filename = "../Store/Client_iv.bin";
 
-    ifstream infile(filename, ios::binary);
+    ifstream inFile(filename, ios::binary);
 
-    if (!infile.is_open())
+    if (!inFile.is_open())
     {
         cout << "Error opening file for reading." << endl;
+        return;
     }
-
-    int dsk_ivLength;
-    infile.read(reinterpret_cast<char *>(&dsk_ivLength), sizeof(int));
-    char *dsk_iv_char = new char[dsk_ivLength + 1];
-    infile.read(dsk_iv_char, dsk_ivLength);
-    dsk_iv_char[dsk_ivLength] = '\0';
-    string dsk_iv_str(dsk_iv_char);
-    infile.close();
+    
+    string dsk_iv_str;
+    readFromBin(inFile, dsk_iv_str);
+    inFile.close();
 
     // Generate the symmetric key
     CryptoPP::byte aes_key[16];
@@ -245,7 +238,6 @@ void Client::dataEncryption(string &sk, CryptoPP::byte* iv)
     CryptoPP::byte aes_key[16];
     CryptoPP::StringSource(sk, true, new CryptoPP::HexDecoder(new CryptoPP::ArraySink(aes_key, 16)));
 
-    cout << "the decryption server: " << endl;
     aes_EAX_FileEnc(infilename, aes_key, iv, outfilename);
 }
 
@@ -257,6 +249,5 @@ void Client::dataDecryption(string &sk, CryptoPP::byte* iv)
     CryptoPP::byte aes_key[16];
     CryptoPP::StringSource(sk, true, new CryptoPP::HexDecoder(new CryptoPP::ArraySink(aes_key, 16)));
 
-    cout << "the last danceh" << endl;
     aes_EAX_FileDec(infilename, aes_key, iv, outfilename);
 }

@@ -30,6 +30,12 @@ Integer string_To_Integer(string &Integer);
 // Transfrom Integer to bytes
 void integer_To_Bytes(Integer num, CryptoPP::byte *bytes);
 
+// Write a string into a .bin file
+void writeToBin(ofstream& outFile, string str);
+
+// Read a string from a .bin file
+void readFromBin(ifstream& inFile, string& str);
+
 // AES_CBC encryption operation
 void aes_CBC_Enc(const string &plain, const CryptoPP::byte *key, const CryptoPP::byte *iv, string &cipher);
 

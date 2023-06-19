@@ -30,6 +30,7 @@ element_t g, h;
 // System Initialization
 void sysInitial()
 {
+    cout << "*********************************System Initialization********************************" << endl;
     // Set pbc param
     char param[1024];
     size_t count = fread(param, 1, 1024, stdin);
@@ -42,10 +43,11 @@ void sysInitial()
     // Declare and initialize variables
     element_init_G1(h, pairing);
     element_init_G2(g, pairing);
-
+    
+    // Generate the variables
     element_random(g);
 
-    cout << "System initial finished!" << endl;
+    cout << "System initialization finished!" << endl;
 }
 
 // Converts a byte array to a hexadecimal string
@@ -131,6 +133,21 @@ void integer_To_Bytes(Integer num, CryptoPP::byte *bytes)
     }
 }
 
+void writeToBin(ofstream& outFile, string str) {
+    int strLength = str.length();
+    outFile.write(reinterpret_cast<char *>(&strLength), sizeof(int));
+    outFile.write(str.c_str(), strLength);
+}
+
+void readFromBin(ifstream& inFile, string& str) {
+    int strLength;
+    inFile.read(reinterpret_cast<char *>(&strLength), sizeof(int));
+    char *str_char = new char[strLength + 1];
+    inFile.read(str_char, strLength);
+    str_char[strLength] = '\0';
+    str = str_char;
+}
+
 void aes_CBC_Enc(const string &plain, const CryptoPP::byte *key, const CryptoPP::byte *iv, string &cipher)
 {
 
@@ -143,60 +160,56 @@ void aes_CBC_Enc(const string &plain, const CryptoPP::byte *key, const CryptoPP:
                                                     false // do not append a newline
                                                     )));
 
-    // CBC_Mode< AES >::Encryption e;
-    // e.SetKeyWithIV(key, 16, iv);
-    // StringSource s(plain, true, new StreamTransformationFilter(e, new StringSink(cipher))); // StringSource
+    // // Pretty print cipher
+    // std::string encoded;
+    // HexEncoder encoder(new StringSink(encoded));
+    // encoder.Put((const CryptoPP::byte *)cipher.data(), cipher.size());
+    // encoder.MessageEnd();
 
-    // Pretty print cipher
-    std::string encoded;
-    HexEncoder encoder(new StringSink(encoded));
-    encoder.Put((const CryptoPP::byte *)cipher.data(), cipher.size());
-    encoder.MessageEnd();
+    // cout << "plaintext: " << plain << endl;
+    // cout << "cipher text: " << encoded << endl;
 
-    cout << "plaintext: " << plain << endl;
-    cout << "cipher text: " << encoded << endl;
+    // // Pretty print iv
+    // encoded.clear();
+    // StringSource(iv, 16, true,
+    //              new HexEncoder(
+    //                  new StringSink(encoded)) // HexEncoder
+    // );                                        // StringSource
+    // cout << "iv: " << encoded << endl;
 
-    // Pretty print iv
-    encoded.clear();
-    StringSource(iv, 16, true,
-                 new HexEncoder(
-                     new StringSink(encoded)) // HexEncoder
-    );                                        // StringSource
-    cout << "iv: " << encoded << endl;
-
-    // Pretty print key
-    encoded.clear();
-    StringSource(key, 16, true,
-                 new HexEncoder(
-                     new StringSink(encoded)) // HexEncoder
-    );                                        // StringSource
-    cout << "key: " << encoded << endl;
+    // // Pretty print key
+    // encoded.clear();
+    // StringSource(key, 16, true,
+    //              new HexEncoder(
+    //                  new StringSink(encoded)) // HexEncoder
+    // );                                        // StringSource
+    // cout << "key: " << encoded << endl;
 }
 
 void aes_CBC_Dec(const string &cipher, const CryptoPP::byte *key, const CryptoPP::byte *iv, string &plain)
 {
-    // Pretty print cipher
-    std::string encoded;
-    HexEncoder encoder(new StringSink(encoded));
-    encoder.Put((const CryptoPP::byte *)cipher.data(), cipher.size());
-    encoder.MessageEnd();
-    std::cout << "cipher text: " << encoded << std::endl;
+    // // Pretty print cipher
+    // std::string encoded;
+    // HexEncoder encoder(new StringSink(encoded));
+    // encoder.Put((const CryptoPP::byte *)cipher.data(), cipher.size());
+    // encoder.MessageEnd();
+    // std::cout << "cipher text: " << encoded << std::endl;
 
-    // Pretty print iv
-    encoded.clear();
-    StringSource(iv, 16, true,
-                 new HexEncoder(
-                     new StringSink(encoded)) // HexEncoder
-    );                                        // StringSource
-    cout << "iv: " << encoded << endl;
+    // // Pretty print iv
+    // encoded.clear();
+    // StringSource(iv, 16, true,
+    //              new HexEncoder(
+    //                  new StringSink(encoded)) // HexEncoder
+    // );                                        // StringSource
+    // cout << "iv: " << encoded << endl;
 
-    // Pretty print key
-    encoded.clear();
-    StringSource(key, 16, true,
-                 new HexEncoder(
-                     new StringSink(encoded)) // HexEncoder
-    );                                        // StringSource
-    cout << "key: " << encoded << endl;
+    // // Pretty print key
+    // encoded.clear();
+    // StringSource(key, 16, true,
+    //              new HexEncoder(
+    //                  new StringSink(encoded)) // HexEncoder
+    // );                                        // StringSource
+    // cout << "key: " << encoded << endl;
 
     CBC_Mode<AES>::Decryption decryption;
     decryption.SetKeyWithIV(key, AES::DEFAULT_KEYLENGTH, iv);
@@ -204,10 +217,6 @@ void aes_CBC_Dec(const string &cipher, const CryptoPP::byte *key, const CryptoPP
                  new Base64Decoder(
                      new StreamTransformationFilter(decryption,
                                                     new StringSink(plain))));
-
-    // CBC_Mode<AES>::Decryption decryption;
-    // decryption.SetKeyWithIV(key, AES::DEFAULT_KEYLENGTH, iv);
-    // StringSource(cipher, true, new StreamTransformationFilter(decryption, new StringSink(plain)));
 }
 
 void authentication(string &ID_u_str, string &cred, string &EM, CryptoPP::byte *iv)
@@ -230,6 +239,7 @@ void authentication(string &ID_u_str, string &cred, string &EM, CryptoPP::byte *
     else
     {
         cout << "Replay attack waring!" << endl;
+        return ;
     }
 
     string ID_u_decypted = plain.substr(0, plain.find(':'));
@@ -241,6 +251,7 @@ void authentication(string &ID_u_str, string &cred, string &EM, CryptoPP::byte *
     else
     {
         cout << "Illegal user warning!" << endl;
+        return ;
     }
 }
 
@@ -258,43 +269,10 @@ void aes_EAX_FileEnc(const string &infilename, const CryptoPP::byte *key, const 
         cout << "Error opening file for writing." << endl;
     }
 
-    cout << "in the encryption phase" << endl;
-    // CBC_Mode<AES>::Encryption encryptor;
-    // encryptor.SetKeyWithIV(key, 16, iv);
-
-    // FileSource(input, true,
-    //            new StreamTransformationFilter(encryptor,
-    //                                           new Base64Encoder(
-    //                                               new FileSink(output),
-    //                                               false)));
-
-    string encoded;
-    // Pretty print iv
-    encoded.clear();
-    StringSource(iv, 16 * 16, true,
-                 new HexEncoder(
-                     new StringSink(encoded)) // HexEncoder
-    );                                        // StringSource
-    cout << "iv: " << encoded << endl;
-
-    // Pretty print key
-    encoded.clear();
-    StringSource(key, 16, true,
-                 new HexEncoder(
-                     new StringSink(encoded)) // HexEncoder
-    );                                        // StringSource
-    cout << "key: " << encoded << endl;
-
     EAX<AES>::Encryption enc;
     enc.SetKeyWithIV(key, 16, iv, 16 * 16);
-    cout << "this is ok" << endl;
 
-    // FileSource(input, false,
-    //            new AuthenticatedEncryptionFilter(enc,
-    //            new Base64Encoder( new FileSink(output), false)
-    //                                             ));
-
-    const size_t bufferSize = 8192; // 每次读取的缓冲区大小
+    const size_t bufferSize = 8192;
 
     CryptoPP::byte buffer[bufferSize];
 
@@ -312,49 +290,64 @@ void aes_EAX_FileEnc(const string &infilename, const CryptoPP::byte *key, const 
         output.flush();
     }
 
-    cout << "this is ok too" << endl;
+    // string encoded;
+    // // Pretty print iv
+    // encoded.clear();
+    // StringSource(iv, 16*16, true,
+    //              new HexEncoder(
+    //                  new StringSink(encoded)) // HexEncoder
+    // );                                        // StringSource
+    // cout << "iv: " << encoded << endl;
+
+    // // Pretty print key
+    // encoded.clear();
+    // StringSource(key, 16, true,
+    //              new HexEncoder(
+    //                  new StringSink(encoded)) // HexEncoder
+    // );                                        // StringSource
+    // cout << "key: " << encoded << endl;
+
     input.close();
     output.close();
 }
 
 void aes_EAX_FileDec(const string &infilename, const CryptoPP::byte *key, const CryptoPP::byte *iv, const string &outfilename)
 {
-    cout << "in the decryption phase" << endl;
     ifstream input(infilename, ios::binary);
     if (!input.is_open())
     {
         cout << "Error opening file for reading." << endl;
+        return;
     }
 
     ofstream output(outfilename);
     if (!output.is_open())
     {
         cout << "Error opening file for writing." << endl;
+        return ;
     }
 
-    // CBC_Mode<AES>::Decryption decryptor;
-    // decryptor.SetKeyWithIV(key, 16, iv);
+    // string encoded;
+    // // Pretty print iv
+    // encoded.clear();
+    // StringSource(iv, 16*16, true,
+    //              new HexEncoder(
+    //                  new StringSink(encoded)) // HexEncoder
+    // );                                        // StringSource
+    // cout << "iv: " << encoded << endl;
 
-    // FileSource(input, true,
-    //            new Base64Decoder(
-    //                new StreamTransformationFilter(decryptor,
-    //                                               new FileSink(output))));
+    // // Pretty print key
+    // encoded.clear();
+    // StringSource(key, 16, true,
+    //              new HexEncoder(
+    //                  new StringSink(encoded)) // HexEncoder
+    // );                                        // StringSource
+    // cout << "key: " << encoded << endl;
 
     EAX<AES>::Decryption dec;
     dec.SetKeyWithIV(key, 16, iv, 16 * 16);
 
-    // FileSource(input, false,
-    // new Base64Decoder(
-    //            new AuthenticatedDecryptionFilter(dec,
-    //                                              new FileSink(output))));
-    // FileSource(input, true,
-    //            new AuthenticatedDecryptionFilter(dec,
-    //                                              new FileSink(output),
-    //                                              AuthenticatedDecryptionFilter::DEFAULT_FLAGS,
-    //                                              new StringSink("")));
-
-
-    const size_t bufferSize = 8192; // 每次读取的缓冲区大小
+    const size_t bufferSize = 8192;
 
     CryptoPP::byte buffer[bufferSize];
 
