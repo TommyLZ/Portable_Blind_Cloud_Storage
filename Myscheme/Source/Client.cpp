@@ -16,6 +16,7 @@
 extern const int secureParam;
 extern pairing_t pairing;
 extern element_t g, h;
+extern double client_running_time;
 
 using namespace CryptoPP;
 using namespace std;
@@ -24,22 +25,42 @@ Client::Client() {}
 
 Client::Client(char *psw_u, char *ID_u) : psw_u(psw_u), ID_u(ID_u)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     element_init_Zr(this->r, pairing);
     element_random(this->r);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    client_running_time += duration.count();
 }
 
 char *Client::getPassword()
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     return this->psw_u;
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    client_running_time += duration.count();
 }
 
 char *Client::getID()
 {
+    auto start = chrono::high_resolution_clock::now();
+
     return this->ID_u;
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    client_running_time += duration.count();
 }
 
 void Client::blindPassword(element_t &alpha)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     char *psw_id_str = new char[strlen(this->psw_u) + strlen(this->ID_u) + 1];
     strcpy(psw_id_str, this->psw_u);
     strcat(psw_id_str, this->ID_u);
@@ -49,10 +70,16 @@ void Client::blindPassword(element_t &alpha)
 
     // Blindness
     element_pow_zn(alpha, h, this->r);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    client_running_time += duration.count();
 }
 
 string Client::verifyKS(element_t &alpha, element_t &beta, element_t &public_key)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     element_t tmp1, tmp2;
 
     element_init_GT(tmp1, pairing);
@@ -93,11 +120,17 @@ string Client::verifyKS(element_t &alpha, element_t &beta, element_t &public_key
     string str1 = this->psw_u + salt;
     string pwd_u_hat = sha256Hash(str1);
 
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    client_running_time += duration.count();
+
     return pwd_u_hat;
 }
 
 void Client::CredentialGen(string &s_u, string &cred_ks, string &cred_cs, element_t &alpha, element_t &beta, element_t &public_key)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     string psw_u_hat = verifyKS(alpha, beta, public_key);
     string input1 = psw_u_hat.substr(0, secureParam / 4) + "cloudserver";
     cred_cs = sha256Hash(input1);
@@ -106,10 +139,16 @@ void Client::CredentialGen(string &s_u, string &cred_ks, string &cred_cs, elemen
     s_u = Integer_to_string(randomGeneration(secureParam));
     string input2 = "keyserver" + psw_u_hat.substr(0, secureParam / 4) + s_u;
     cred_ks = sha256Hash(input2);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    client_running_time += duration.count();
 }
 
 void Client::loginToCS(string &psw_u_hat, string &EM_CS, const CryptoPP::byte *iv, element_t &alpha, element_t &beta, element_t &public_key)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     psw_u_hat = verifyKS(alpha, beta, public_key);
     string hash_input = psw_u_hat.substr(0, secureParam / 4) + "cloudserver";
     string omega_cs = sha256Hash(hash_input).substr(0, secureParam / 4);
@@ -125,10 +164,16 @@ void Client::loginToCS(string &psw_u_hat, string &EM_CS, const CryptoPP::byte *i
     string separator = ":";
     string plain = this->ID_u + separator + timestamp_str;
     aes_CBC_Enc(plain, aes_key, iv, EM_CS);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    client_running_time += duration.count();
 }
 
 void Client::loginToKS(string &psw_u_hat, string &s_u, string &EM_KS, CryptoPP::byte *iv)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     string hash_input = "keyserver" + psw_u_hat.substr(0, secureParam / 4) + s_u;
     string omega_ks = sha256Hash(hash_input).substr(0, secureParam / 4);
 
@@ -143,15 +188,23 @@ void Client::loginToKS(string &psw_u_hat, string &s_u, string &EM_KS, CryptoPP::
     string separator = ":";
     string plain = this->ID_u + separator + timestamp_str;
     aes_CBC_Enc(plain, aes_key, iv, EM_KS);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    client_running_time += duration.count();
 }
 
 void Client::loginToKS_KeyOutsource(string &EM_KS, string &ctx_sk, string &rho_u, string &gamma_u, CryptoPP::byte *iv, string &s_u, string &psw_u_hat)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     loginToKS(psw_u_hat, s_u, EM_KS, iv);
 
     // Select the symmetric key for cloud storage
     Integer sk = randomGeneration(secureParam);
+    // cout << "The random selected key is: " << hex << sk << endl;
     string sk_str = Integer_to_string(sk);
+    // cout << "The random selected key is: " << sk_str << endl;
 
     // Derive the second key to encrypt sk
     Integer gamma_u_int = randomGeneration(secureParam);
@@ -186,10 +239,16 @@ void Client::loginToKS_KeyOutsource(string &EM_KS, string &ctx_sk, string &rho_u
     // Genrate the integerity tag
     string integrity_hash_input = ctx_sk + dsk_str;
     rho_u = sha256Hash(integrity_hash_input).substr(0, secureParam / 4);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    client_running_time += duration.count();
 }
 
 void Client::retrieval(string &sk, string &gamma_u, string &psw_u_hat, string &ctx_sk, string &rho_u)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     string derive_input = gamma_u + psw_u_hat.substr(0, secureParam / 4);
     string dsk_str = sha256Hash(derive_input).substr(0, secureParam / 4);
 
@@ -228,6 +287,12 @@ void Client::retrieval(string &sk, string &gamma_u, string &psw_u_hat, string &c
     CryptoPP::StringSource(dsk_iv_str, true, new CryptoPP::HexDecoder(new CryptoPP::ArraySink(dsk_iv, 16)));
 
     aes_CBC_Dec(ctx_sk, aes_key, dsk_iv, sk);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    client_running_time += duration.count();
+
+    cout << "The running time of the client: " << client_running_time << endl;
 }
 
 void Client::dataEncryption(string &sk, CryptoPP::byte* iv)

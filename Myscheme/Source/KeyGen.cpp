@@ -66,6 +66,7 @@ void KeyGen(char *psw_u, char *ID_u) {
 	keyserver.authenInGen_KS(EM_KS, ctx_dsk, rho_u, iv_KS);
     cout << "You have successfully logged in the key server!" << endl;
 
+	cout << "Before storing the random" << endl;
 	// Cloud server storage the random
 	cloudserver.randomStore(gamma_u);
 	cout << "The Key generation is finished!" << endl;

@@ -1,4 +1,3 @@
-
 #include "KeyServer.h"
 #include "PublicParam.h"
 
@@ -15,20 +14,30 @@ extern element_t g;
 using namespace std;
 using namespace CryptoPP;
 
+extern double key_running_time;
+
 static bool key_pair_generated = false;
 
 void KeyServer::save_key_to_file(element_t key, const char *filename)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     std::ofstream outfile(filename, std::ios::binary);
     size_t key_size = element_length_in_bytes(key);
     unsigned char key_bytes[key_size];
     element_to_bytes(key_bytes, key);
     outfile.write((char *)key_bytes, key_size);
     outfile.close();
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    key_running_time += duration.count();
 }
 
 void KeyServer::load_key_from_file(element_t key, const char *filename)
 {
+    auto start = chrono::high_resolution_clock::now();
+
     std::ifstream infile(filename, std::ios::binary);
     infile.seekg(0, infile.end);
     size_t key_size = infile.tellg();
@@ -37,10 +46,15 @@ void KeyServer::load_key_from_file(element_t key, const char *filename)
     infile.read((char *)key_bytes, key_size);
     element_from_bytes(key, key_bytes);
     infile.close();
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    key_running_time += duration.count();
 }
 
 KeyServer::KeyServer()
 {
+    auto start = chrono::high_resolution_clock::now();
     // Generate, store and load public-private key pair
 
     element_init_Zr(this->secret_key, pairing);
@@ -64,16 +78,28 @@ KeyServer::KeyServer()
         load_key_from_file(this->secret_key, "../Store/secret_key.bin");
         load_key_from_file(this->public_key, "../Store/public_key.bin");
     }
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    key_running_time += duration.count();
 }
 
 void KeyServer::hardenPassword(element_t &beta, element_t &alpha)
 {
+    auto start = chrono::high_resolution_clock::now();
+
     // Hard or sign
     element_pow_zn(beta, alpha, this->secret_key);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    key_running_time += duration.count();
 }
 
 void KeyServer::store(char *ID_u, string &cred_ks)
 {
+    auto start = chrono::high_resolution_clock::now();
+
     string filename = "../Store/Cred_ks.bin";
 
     // Check if the file exists
@@ -101,10 +127,17 @@ void KeyServer::store(char *ID_u, string &cred_ks)
     writeToBin(outFile, cred_ks.substr(0, secureParam / 4));
 
     outFile.close();
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    key_running_time += duration.count();
 }
 
 void KeyServer::authenInGen_KS(string &EM_KS, string &ctx_dsk, string &rho_u, CryptoPP::byte *iv)
 {
+    auto start = chrono::high_resolution_clock::now();
+
+
     string filename = "../Store/Cred_ks.bin";
     ifstream inFile(filename, ios::binary);
 
@@ -139,10 +172,16 @@ void KeyServer::authenInGen_KS(string &EM_KS, string &ctx_dsk, string &rho_u, Cr
     writeToBin(outFile, rho_u);
 
     outFile.close();
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    key_running_time += duration.count();
 }
 
 void KeyServer::authenInRetrieve_KS(string &ctx_dsk, string &rho_u, string &EM_KS, CryptoPP::byte *iv)
 {
+    auto start = chrono::high_resolution_clock::now();
+
     string filename = "../Store/Cred_ks.bin";
     ifstream inFile(filename, ios::binary);
 
@@ -162,4 +201,10 @@ void KeyServer::authenInRetrieve_KS(string &ctx_dsk, string &rho_u, string &EM_K
     inFile.close();
 
     authentication(ID_u_str, cred_KS, EM_KS, iv);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    key_running_time += duration.count();
+
+    cout << "The running time of the key server: " << key_running_time << endl;
 }

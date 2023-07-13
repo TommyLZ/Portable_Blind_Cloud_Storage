@@ -9,6 +9,11 @@ using namespace CryptoPP;
 // Secure Parameter
 const int secureParam = 128;
 
+// Running time statistic variable
+static double client_running_time = 0.0;
+static double cloud_running_time = 0.0;
+static double key_running_time = 0.0;
+
 // System Initialization
 void sysInitial();
 
@@ -49,3 +54,4 @@ void aes_EAX_FileEnc(const string &infilename, const CryptoPP::byte *key, const 
 
 // AES_EAX authentication decryption operation
 void aes_EAX_FileDec(const string &infilename, const CryptoPP::byte *key, const CryptoPP::byte *iv, const string &outfilename);
+

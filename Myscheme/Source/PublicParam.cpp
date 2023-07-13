@@ -75,16 +75,32 @@ string sha256Hash(string &str)
     return value;
 }
 
+// Integer randomGeneration(const int &secureParam)
+// {
+//     AutoSeededRandomPool prng;
+//     Integer p;
+
+//     AlgorithmParameters params = MakeParameters("BitLength", secureParam);
+//     p.GenerateRandom(prng, params);
+
+//     return p;
+// }
+
 Integer randomGeneration(const int &secureParam)
 {
     AutoSeededRandomPool prng;
-    Integer p;
+    SecByteBlock randomBlock(secureParam / 8);
+    prng.GenerateBlock(randomBlock, randomBlock.size());
 
-    AlgorithmParameters params = MakeParameters("BitLength", secureParam);
-    p.GenerateRandom(prng, params);
+    Integer randomInt(randomBlock, randomBlock.size());
 
-    return p;
+    if (randomInt.BitCount() < 128) {
+        randomInt <<= (128 - randomInt.BitCount());
+    }
+
+    return randomInt;
 }
+
 
 string Integer_to_string(const Integer &integer)
 {
@@ -223,7 +239,7 @@ void authentication(string &ID_u_str, string &cred, string &EM, CryptoPP::byte *
 {
     string plain;
     CryptoPP::byte cred_key[16];
-    integer_To_Bytes(string_To_Integer(cred), cred_key);
+    CryptoPP::StringSource(cred, true, new CryptoPP::HexDecoder(new CryptoPP::ArraySink(cred_key, 16)));  
     aes_CBC_Dec(EM, cred_key, iv, plain);
 
     string timestamp_decrypted = plain.substr(plain.find(':') + 1, plain.size());

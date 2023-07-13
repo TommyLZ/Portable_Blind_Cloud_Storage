@@ -5,6 +5,7 @@
 #include "PublicParam.h"
 
 #include <iostream>
+#include <chrono>
 #include <cryptopp/osrng.h>
 #include <pbc/pbc.h>
 
@@ -67,11 +68,12 @@ void KeyRetrieve(char *psw_u, char *ID_u)
 	client.retrieval(sk, gamma_u, psw_u_hat, ctx_dsk, rho_u);
 	cout << "The key retrieval is finished!" << endl;
 
-	CryptoPP::byte iv[16 * 16];
-	AutoSeededRandomPool prng;
-	prng.GenerateBlock(iv, 16 * 16);
-	client.dataEncryption(sk, iv);
-	cout << "The applicaiton data is encrypted and outsourced successfully!" << endl;
-	client.dataDecryption(sk, iv);
-	cout << "The applicaiton data is recovered successfully!" << endl;
+	// CryptoPP::byte iv[16 * 16];
+	// AutoSeededRandomPool prng;
+	// prng.GenerateBlock(iv, 16 * 16);
+	
+	// client.dataEncryption(sk, iv);
+	// cout << "The applicaiton data is encrypted and outsourced successfully!" << endl;
+	// client.dataDecryption(sk, iv);
+	// cout << "The applicaiton data is recovered successfully!" << endl;
 }

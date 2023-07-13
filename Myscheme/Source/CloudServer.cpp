@@ -7,10 +7,14 @@
 using namespace std;
 using namespace std;
 
+extern double cloud_running_time;
+
 CloudServer::CloudServer() {}
 
 void CloudServer::store(char *ID_u, string &cred_cs, string &s_u)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     string filename = "../Store/Cred_cs.bin";
 
     // Check if the file exists
@@ -38,10 +42,16 @@ void CloudServer::store(char *ID_u, string &cred_cs, string &s_u)
     writeToBin(outFile, s_u);
 
     outFile.close();
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    cloud_running_time += duration.count();
 }
 
 void CloudServer::authenInGen_CS(string &s_u, char *ID_u, string &EM_CS, CryptoPP::byte (&iv)[16])
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     string filename = "../Store/Cred_cs.bin";
     ifstream inFile(filename, ios::binary);
 
@@ -59,10 +69,16 @@ void CloudServer::authenInGen_CS(string &s_u, char *ID_u, string &EM_CS, CryptoP
     inFile.close();
 
     authentication(ID_u_str, cred_CS, EM_CS, iv);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    cloud_running_time += duration.count();
 }
 
 void CloudServer::authenInRetrieve_CS(string &s_u, string &gamma_u, char *ID_u, string &EM, CryptoPP::byte *iv)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     string filename = "../Store/Cred_cs.bin";
     ifstream inFile(filename, ios::binary);
 
@@ -81,10 +97,18 @@ void CloudServer::authenInRetrieve_CS(string &s_u, string &gamma_u, char *ID_u, 
     inFile.close();
 
     authentication(ID_u_str, cred_CS, EM, iv);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    cloud_running_time += duration.count();
+
+    cout << "The running time of the cloud server: " << cloud_running_time << endl;
 }
 
 void CloudServer::randomStore(string &gamma_u)
 {
+    auto start = chrono::high_resolution_clock::now();
+    
     string filename = "../Store/Cred_cs.bin";
 
     ofstream outFile(filename, ios::binary | ios::app);
@@ -95,4 +119,8 @@ void CloudServer::randomStore(string &gamma_u)
     }
 
     writeToBin(outFile, gamma_u);
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    cloud_running_time += duration.count();
 }
