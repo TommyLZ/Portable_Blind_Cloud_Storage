@@ -19,7 +19,7 @@ public:
     void save_key_to_file(element_t key, const char* filename);
     void load_key_from_file(element_t key, const char* filename);
 
-    void hardenPassword(element_t &beta, element_t &alpha);
+    void hardenPassword(element_t &beta, element_t &alpha, char* ID_u);
     
     void store(char* ID_u, string& cred_ks );
 

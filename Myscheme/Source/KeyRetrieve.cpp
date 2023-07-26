@@ -31,7 +31,7 @@ void KeyRetrieve(char *psw_u, char *ID_u)
 	// Password hardening
 	element_t beta;
 	element_init_G1(beta, pairing);
-	keyserver.hardenPassword(beta, alpha);
+	keyserver.hardenPassword(beta, alpha, ID_u);
 	cout << "Password Hardening Finished!" << endl;
 
 	// Log in to the cloud server

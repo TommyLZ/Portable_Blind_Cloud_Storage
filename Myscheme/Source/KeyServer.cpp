@@ -84,12 +84,25 @@ KeyServer::KeyServer()
     key_running_time += duration.count();
 }
 
-void KeyServer::hardenPassword(element_t &beta, element_t &alpha)
+void KeyServer::hardenPassword(element_t &beta, element_t &alpha, char* ID_u)
 {
     auto start = chrono::high_resolution_clock::now();
 
     // Hard or sign
-    element_pow_zn(beta, alpha, this->secret_key);
+    element_t k_u;
+    element_init_Zr(k_u, pairing);
+
+    size_t buffer_size = element_length_in_bytes(this->secret_key) + 1;
+    char* key_buffer = (char*)malloc(buffer_size * sizeof(char));
+
+    element_to_bytes((unsigned char*)key_buffer, this->secret_key);
+    
+    char* input = new char [strlen(ID_u) + strlen(key_buffer) + 1];
+    strcpy(input, ID_u);
+    strcat(input, key_buffer);
+    element_from_hash(k_u, input, strlen(input));
+
+    element_pow_zn(beta, alpha, k_u);
 
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;

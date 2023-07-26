@@ -61,9 +61,8 @@ void Client::blindPassword(element_t &alpha)
 {
     auto start = chrono::high_resolution_clock::now();
     
-    char *psw_id_str = new char[strlen(this->psw_u) + strlen(this->ID_u) + 1];
+    char *psw_id_str = new char[strlen(this->psw_u) + 1];
     strcpy(psw_id_str, this->psw_u);
-    strcat(psw_id_str, this->ID_u);
 
     // Hash to G1
     element_from_hash(h, psw_id_str, strlen(psw_id_str));
@@ -80,23 +79,23 @@ string Client::verifyKS(element_t &alpha, element_t &beta, element_t &public_key
 {
     auto start = chrono::high_resolution_clock::now();
     
-    element_t tmp1, tmp2;
+    // element_t tmp1, tmp2;
 
-    element_init_GT(tmp1, pairing);
-    element_init_GT(tmp2, pairing);
+    // element_init_GT(tmp1, pairing);
+    // element_init_GT(tmp2, pairing);
 
-    pairing_apply(tmp1, beta, g, pairing);
-    pairing_apply(tmp2, alpha, public_key, pairing);
+    // pairing_apply(tmp1, beta, g, pairing);
+    // pairing_apply(tmp2, alpha, public_key, pairing);
 
-    if (!element_cmp(tmp1, tmp2))
-    {
-        cout << "The key server verifies!" << endl;
-    }
-    else
-    {
-        cout << "The key server not verify!" << endl;
-        return "Error!";
-    }
+    // if (!element_cmp(tmp1, tmp2))
+    // {
+    //     cout << "The key server verifies!" << endl;
+    // }
+    // else
+    // {
+    //     cout << "The key server not verify!" << endl;
+    //     return "Error!";
+    // }
 
     // Deblindness
     element_t r_inverse;
